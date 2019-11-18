@@ -1,200 +1,221 @@
 #include "fonctionMouvement.h"
+/*
+https://tutorial.cytron.io/2016/10/13/make-line-following-robot-faster/
+https://create.arduino.cc/projecthub/azoreanduino/simple-bluetooth-lamp-controller-using-android-and-arduino-aa2253
+*/
+#include <AutoPID.h>
+#include <PID_AutoTune_v0/PID_AutoTune_v0.h>
 
-#define moteurGauche 0
-#define moteurDroit 1
+//pid settings and gains
+#define OUTPUT_MIN -1
+#define OUTPUT_MAX 1
+#define KP 0.1
+#define KI 0.0
+#define KD 0.0
 
-#define pinCapteurGauche 24
-#define pinCapteurMilieu 22
-#define pinCapteurDroit 26
+double input, setPoint, outputValGauche, outputValDroit;
 
-#define gauche 0
-#define droit 1
+//input/output variables passed by reference, so they are updated automatically
+AutoPID GauchePID(&input, &setPoint, &outputValGauche, OUTPUT_MIN, OUTPUT_MAX, KP, KI, KD);
+AutoPID DroitPID(&input, &setPoint, &outputValDroit, OUTPUT_MIN, OUTPUT_MAX, KP, KI, KD);
 
-#define pince 0
+const int pinDroit = 1;
+const int pinMilieu = 2;
+const int pinGauche = 3;
 
 /*
-byte ATuneModeRemember=2;
-double input=80, output=50, setpoint=180;
-double kp=2,ki=0.5,kd=2;
-
-double kpmodel=1.5, taup=100, theta[50];
-double outputStart=5;
-double aTuneStep=50, aTuneNoise=1, aTuneStartValue=100;
-unsigned int aTuneLookBack=20;
-
-boolean tuning = false;
-unsigned long  modelTime, serialTime;
-
-PID myPID(&input, &output, &setpoint,kp,ki,kd, 1);
-PID_ATune aTune(&input, &output);
-
-//set to false to connect to the real world
-boolean useSimulation = false;
-
 void setup()
 {
-  if(useSimulation)
-  {
-    for(byte i=0;i<50;i++)
-    {
-      theta[i]=outputStart;
-    }
-    modelTime = 0;
-  }
-  //Setup the pid 
-  myPID.SetMode(0);
+  Serial.begin(9600);       
+  BoardInit();
 
-  if(tuning)
-  {
-    tuning=false;
-    changeAutoTune();
-    tuning=true;
-  }
-  
-  serialTime = 0;
-  Serial.begin(9600);
+  //if input is more than 1 below or above setpoint, OUTPUT will be set to min or max respectively
+  GauchePID.setBangBang(1);
+  DroitPID.setBangBang(1);
+  //set PID update interval to 4000ms
+  GauchePID.setTimeStep(0); 
+  DroitPID.setTimeStep(0); 
+
+  pinMode(pinDroit,  OUTPUT);
+  pinMode(pinMilieu, OUTPUT);
+  pinMode(pinGauche, OUTPUT); 
+ 
+  setPoint = 0;
 
 }
 
 void loop()
 {
+  input = readCapteur();
 
-  unsigned long now = millis();
+  GauchePID.run();
+  DroitPID.run();
 
-  if(!useSimulation)
-  { //pull the input in from the real world
-    input = analogRead(0);
-  }
+  MOTOR_SetSpeed(gauche, outputValGauche);
+  MOTOR_SetSpeed(droit, -outputValDroit);
+
+}
+
+int readCapteur()
+{
   
-  if(tuning)
+  if(!digitalRead(pinDroit) && digitalRead(pinMilieu) && !digitalRead(pinGauche))
   {
-    byte val = (aTune.Runtime());
-    if (val!=0)
-    {
-      tuning = false;
-    }
-    if(!tuning)
-    { //we're done, set the tuning parameters
-      kp = aTune.GetKp();
-      ki = aTune.GetKi();
-      kd = aTune.GetKd();
-      myPID.SetTunings(kp,ki,kd);
-      AutoTuneHelper(false);
-    }
+    //va tout droit
+    return 0;
   }
-  else myPID.Compute();
-  
-  if(useSimulation)
+  else if(!digitalRead(pinDroit) && !digitalRead(pinMilieu) && digitalRead(pinGauche))
   {
-    theta[30]=output;
-    if(now>=modelTime)
-    {
-      modelTime +=100; 
-      DoModel();
-    }
+    //tourne a gauche
+    return 1;
   }
-  else
+  else if(digitalRead(pinDroit) && !digitalRead(pinMilieu) && !digitalRead(pinGauche))
   {
-     analogWrite(0,output); 
+    //tourne a droit
+    return -1;
   }
-  
-  //send-receive with processing if it's time
-  if(millis()>serialTime)
-  {
-    SerialReceive();
-    SerialSend();
-    serialTime+=500;
-  }
-}
-
-void changeAutoTune()
-{
- if(!tuning)
-  {
-    //Set the output to the desired starting frequency.
-    output=aTuneStartValue;
-    aTune.SetNoiseBand(aTuneNoise);
-    aTune.SetOutputStep(aTuneStep);
-    aTune.SetLookbackSec((int)aTuneLookBack);
-    AutoTuneHelper(true);
-    tuning = true;
-  }
-  else
-  { //cancel autotune
-    aTune.Cancel();
-    tuning = false;
-    AutoTuneHelper(false);
-  }
-}
-
-void AutoTuneHelper(boolean start)
-{
-  if(start)
-    ATuneModeRemember = myPID.GetMode();
-  else
-    myPID.SetMode(ATuneModeRemember);
-}
-
-
-void SerialSend()
-{
-  Serial.print("setpoint: ");Serial.print(setpoint); Serial.print(" ");
-  Serial.print("input: ");Serial.print(input); Serial.print(" ");
-  Serial.print("output: ");Serial.print(output); Serial.print(" ");
-  if(tuning){
-    Serial.println("tuning mode");
-  } else {
-    Serial.print("kp: ");Serial.print(myPID.GetKp());Serial.print(" ");
-    Serial.print("ki: ");Serial.print(myPID.GetKi());Serial.print(" ");
-    Serial.print("kd: ");Serial.print(myPID.GetKd());Serial.println();
-  }
-}
-
-void SerialReceive()
-{
-  if(Serial.available())
-  {
-   char b = Serial.read(); 
-   Serial.flush(); 
-   if((b=='1' && !tuning) || (b!='1' && tuning))changeAutoTune();
-  }
-}
-
-void DoModel()
-{
-  //cycle the dead time
-  for(byte i=0;i<49;i++)
-  {
-    theta[i] = theta[i+1];
-  }
-  //compute the input
-  input = (kpmodel / taup) *(theta[0]-outputStart) + input*(1-1/taup) + ((float)random(-10,10))/100;
-
 }
 */
+/*
+#include <SoftwareSerial.h> 
+#define RELAY 10 
+#define LIGHT 13 
+SoftwareSerial btm(2,3); // rx tx 
+int index = 0; 
+char data[10]; 
+char c; 
+boolean flag = false;
+void setup() { 
+ pinMode(RELAY,OUTPUT); 
+ pinMode(LIGHT,OUTPUT); 
+ digitalWrite(RELAY,HIGH); 
+ digitalWrite(LIGHT,LOW); 
+ btm.begin(9600); 
+} 
+void loop() { 
+   if(btm.available() > 0){ 
+     while(btm.available() > 0){ 
+          c = btm.read(); 
+          delay(10); //Delay required 
+          data[index] = c; 
+          index++; 
+     } 
+     data[index] = '\0'; 
+     flag = true;   
+   }  
+   if(flag){ 
+     processCommand(); 
+     flag = false; 
+     index = 0; 
+     data[0] = '\0'; 
+   } 
+} 
+void processCommand(){ 
+ char command = data[0]; 
+ char inst = data[1]; 
+ switch(command){ 
+   case 'R': 
+         if(inst == 'Y'){ 
+           digitalWrite(RELAY,LOW); 
+           btm.println("Relay: ON"); 
+         } 
+         else if(inst == 'N'){ 
+           digitalWrite(RELAY,HIGH); 
+           btm.println("Relay: OFF"); 
+         } 
+   break; 
+   case 'L': 
+         if(inst == 'Y'){ 
+           digitalWrite(LIGHT,HIGH); 
+           btm.println("Light: ON"); 
+         } 
+         else if(inst == 'N'){ 
+           digitalWrite(LIGHT,LOW); 
+           btm.println("Light: OFF"); 
+         } 
+   break; 
+ } 
+} */
 
-//Define Variables we'll be connecting to
-double Setpoint, Input, Output;
+#include <QTRSensors.h>
 
-//Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint,2,5,1,P_ON_M, DIRECT); //P_ON_M specifies that Proportional on Measurement be used
-                                                            //P_ON_E (Proportional on Error) is the default behavior
+#define Kp 0.05            // experiment to determine this, start by something small that just makes your bot follow the line at a slow speed
+#define Kd 2               // experiment to determine this, slowly increase the speeds and adjust this value. ( Note: Kp < Kd)
+#define rightMaxSpeed 1  // max speed of the robot
+#define leftMaxSpeed 1   // max speed of the robot
+#define rightBaseSpeed 0.8 // this is the speed at which the motors should spin when the robot is perfectly on the line
+#define leftBaseSpeed 0.8  // this is the speed at which the motors should spin when the robot is perfectly on the line
+#define TIMEOUT 2500       // waits for 2500 us for sensor outputs to go low
+#define EMITTER_PIN 2      // emitter is controlled by digital pin 2
+
+QTRSensors qtr;
+
+const uint8_t SensorCount = 6;
+uint16_t sensorValues[SensorCount];
 
 void setup()
 {
-  //initialize the variables we're linked to
-  Input = analogRead(0);
-  Setpoint = 100;
 
-  //turn the PID on
-  myPID.SetMode(AUTOMATIC);
+  /* comment this part out for automatic calibration
+  if ( i  < 25 || i >= 75 ) // turn to the left and right to expose the sensors to the brightest and darkest readings that may be encountered
+     turn_right(); 
+   else
+     turn_left(); */
+  qtr.calibrate(QTRReadMode::On);
+  qtr.setTypeAnalog();
+  qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5}, SensorCount);
+  qtr.setEmitterPin(EMITTER_PIN);
+  delay(20);
+
+  delay(10000); // wait for 2s to position the bot before entering the main loop
+
+  /* comment out for serial printing
+   
+    Serial.begin(9600);
+    for (int i = 0; i < NUM_SENSORS; i++)
+    {
+      Serial.print(qtrrc.calibratedMinimumOn[i]);
+      Serial.print(' ');
+    }
+    Serial.println();
+
+    for (int i = 0; i < NUM_SENSORS; i++)
+    {
+      Serial.print(qtrrc.calibratedMaximumOn[i]);
+      Serial.print(' ');
+    }
+    Serial.println();
+    Serial.println();
+    */
 }
+
+int lastError = 0;
 
 void loop()
 {
-  Input = ENCODER_Read(moteurGauche);
-  myPID.Compute();
 
-  MOTOR_SetSpeed(moteurGauche,0.3);
-  MOTOR_SetSpeed(moteurDroit,Output); 
+  //retourne 1 s'il trouve la couleur noir
+  int position = qtr.readLineBlack(sensorValues);
+  int error = position - 2500;
+
+  int motorSpeed = Kp * error + Kd * (error - lastError);
+  lastError = error;
+
+  int rightMotorSpeed = rightBaseSpeed + motorSpeed;
+  int leftMotorSpeed = leftBaseSpeed - motorSpeed;
+
+  if (rightMotorSpeed > rightMaxSpeed)
+    rightMotorSpeed = rightMaxSpeed; // prevent the motor from going beyond max speed
+  if (leftMotorSpeed > leftMaxSpeed)
+    leftMotorSpeed = leftMaxSpeed; // prevent the motor from going beyond max speed
+  if (rightMotorSpeed < 0)
+    rightMotorSpeed = 0; // keep the motor speed positive
+  if (leftMotorSpeed < 0)
+    leftMotorSpeed = 0; // keep the motor speed positive
+
+  {
+    // move forward with appropriate speeds
+    MOTOR_SetSpeed(gauche, leftMotorSpeed);
+    MOTOR_SetSpeed(droit, rightMotorSpeed);
+  }
 }
