@@ -32,7 +32,7 @@ const int pinGauche = 3;
 #define rightBaseSpeed 0.8 // this is the speed at which the motors should spin when the robot is perfectly on the line
 #define leftBaseSpeed 0.8  // this is the speed at which the motors should spin when the robot is perfectly on the line
 #define TIMEOUT 2500       // waits for 2500 us for sensor outputs to go low
-#define EMITTER_PIN 2      // emitter is controlled by digital pin 2
+#define EMITTER_PIN 9      // emitter is controlled by digital pin 2
 
 QTRSensors qtr;
 
@@ -41,7 +41,7 @@ uint16_t sensorValues[SensorCount];
 
 void setup()
 {
-
+  BoardInit();
   /* comment this part out for automatic calibration
   if ( i  < 25 || i >= 75 ) // turn to the left and right to expose the sensors to the brightest and darkest readings that may be encountered
      turn_right(); 
@@ -51,9 +51,7 @@ void setup()
   qtr.setTypeAnalog();
   qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5}, SensorCount);
   qtr.setEmitterPin(EMITTER_PIN);
-  delay(20);
-
-  delay(2000); // wait for 2s to position the bot before entering the main loop
+  delay(20); 
 
   /* comment out for serial printing
    
@@ -81,9 +79,7 @@ void loop()
 {
   //retourne 1 s'il trouve la couleur noir
   int position = qtr.readLineBlack(sensorValues);
-
-  Serial.println(position);
-  /*
+ 
   int error = position - 2500;
 
   int motorSpeed = Kp * error + Kd * (error - lastError);
@@ -104,5 +100,4 @@ void loop()
   // move forward with appropriate speeds
   MOTOR_SetSpeed(gauche, leftMotorSpeed);
   MOTOR_SetSpeed(droit, rightMotorSpeed);
-  */
 }
