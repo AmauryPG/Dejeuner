@@ -5,3 +5,4 @@ void PIDAvancer(PID pid, float &input, float &output, float vitesse, float dista
 void PIDAvancer(PID pid, float &input, float &output, float vitesseInitiale, float vitesseFinale, float distanceEnCM, float distanceAccelerationEnCM);
 void PIDAvancer(PID pid, float &input, float &output, float vitesseInitiale, float vitesseintermediaire, float vitesseFinale, float distanceEnCM, float distanceAccelerationEnCM, float distanceDecelerationEnCM);
 */
+

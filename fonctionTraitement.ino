@@ -1,4 +1,4 @@
-#include "fonctionTraitement.h" 
+#include "fonctionTraitement.h"
 
 ///////////////////////////////fonction get////////////////////////////////////
 
@@ -15,4 +15,18 @@ int getAngleEncodeur(float angleEnDegre)
 {
     //calcule pour avoir l'arc et ensuite le transfomer en language encodeur
     return getDistanceEncodeur((19.4) * PI * angleEnDegre / 360);
+}
+
+void getBluetooth(char message[])
+{
+    int index = 0;
+    if (Serial.available())
+    {
+        while (Serial.available() > 0)
+        {
+            message[index] = Serial.read();
+            index++;
+        }
+        message[index] = '\0'; 
+    }
 }
