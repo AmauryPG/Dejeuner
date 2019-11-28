@@ -243,8 +243,10 @@ int find_plate(struct scanner array1[], struct scanner array2[], int sensor_tabl
         scan(50, 50, 1, sensor2, sensor_table2, scan_array2, length_sensor_table, i);
         delay(50);
     }
+    
     smallest_value_sensor1 = find_smallest_distance(scan_array1);
     smallest_value_sensor2 = find_smallest_distance(scan_array2);
+
     if (smallest_value_sensor1 != 0 &&
         scan_array2[MAXSCAN - smallest_value_sensor1].distance == 100)
     {
@@ -269,7 +271,6 @@ void TrouverVerre()
     find_glass(scan_array1, scan_array2, values_sensor0, 0, 1, values_sensor1, MAXVALUES, MAXSCAN);
 }
 
-////////////////-------------------------------------------------------------------------------------------
 void TrouverAssiette()
 {
     find_plate(scan_array1, scan_array2, values_sensor0, 0, 1, values_sensor1, MAXVALUES, MAXSCAN);
