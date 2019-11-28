@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <LibRobus.h>  
-#include <SoftwareSerial.h> 
-#include <QTRSensors.h>
+#include <SoftwareSerial.h>  
 
 #define gauche 0
 #define droit 1
