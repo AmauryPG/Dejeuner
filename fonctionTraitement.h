@@ -7,6 +7,9 @@
 
 #define pince 0
 
+#define capteurGauche 1
+#define capteurDroit  1
+
 #define KP 0.1
 #define KI 0.0
 #define KD 0.0

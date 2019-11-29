@@ -62,8 +62,27 @@ void PIDSuiveurLigne()
 }
 
 /*********************************************************************************************************************************
- *                                                          Pince                                                                * 
+ *                                                          Pelle                                                                * 
 *********************************************************************************************************************************/
+
+void PainInit()
+{
+    pinMode(capteurDroit, INPUT);
+    pinMode(capteurGauche, INPUT);
+}
+
+void actionPain()
+{
+    if (digitalRead(capteurGauche) && digitalRead(capteurDroit))
+    {
+        //baisser la pelle
+
+        //attendre le pain
+        delay(1000);
+
+        //monter la pelle
+    }
+}
 
 /*********************************************************************************************************************************
  *                                                         Aligneur                                                              * 
@@ -180,14 +199,14 @@ int find_glass(struct scanner scan_array1[], struct scanner scan_array2[], int s
                int sensor_table2[], int length_sensor_table, int num_scans)
 {
     int i, smallest_value_sensor1, smallest_value_sensor2;
-    
+
     //Serial.println("Looking for a glass");
     for (i = 0; i < num_scans; i++)
     {
         scan(50, 50, 0, sensor1, sensor_table1, scan_array1, length_sensor_table, i);
         delay(50);
     }
-    
+
     //Serial.println("Changing scanner");
     delay(1000);
     for (i = 0; i < num_scans; i++)
@@ -197,7 +216,7 @@ int find_glass(struct scanner scan_array1[], struct scanner scan_array2[], int s
     }
     smallest_value_sensor1 = find_smallest_distance(scan_array1);
     smallest_value_sensor2 = find_smallest_distance(scan_array2);
-    
+
     /*Serial.println("-------");
     Serial.println(num_scans - smallest_value_sensor2);
     Serial.println(smallest_value_sensor1);
@@ -228,14 +247,14 @@ int find_plate(struct scanner array1[], struct scanner array2[], int sensor_tabl
                int sensor_table2[], int length_sensor_table, int num_scans)
 {
     int i, smallest_value_sensor1, smallest_value_sensor2;
-    
+
     //Serial.println("Looking for a plate");
     for (i = 0; i < num_scans; i++)
     {
         scan(50, 50, 0, sensor1, sensor_table1, scan_array1, length_sensor_table, i);
         delay(50);
     }
-    
+
     //Serial.println("Changing scanner");
     delay(1000);
     for (i = 0; i < MAXSCAN; i++)
@@ -243,7 +262,7 @@ int find_plate(struct scanner array1[], struct scanner array2[], int sensor_tabl
         scan(50, 50, 1, sensor2, sensor_table2, scan_array2, length_sensor_table, i);
         delay(50);
     }
-    
+
     smallest_value_sensor1 = find_smallest_distance(scan_array1);
     smallest_value_sensor2 = find_smallest_distance(scan_array2);
 
