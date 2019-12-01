@@ -25,4 +25,4 @@ int find_smallest_distance(struct scanner array[]);
 
 void actionPain();
 
-void PainInit()
+void PainInit();
