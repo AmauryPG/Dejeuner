@@ -8,58 +8,8 @@ https://create.arduino.cc/projecthub/azoreanduino/simple-bluetooth-lamp-controll
 #define leftBaseSpeed 0.8  // this is the speed at which the motors should spin when the robot is perfectly on the line
 #define EMITTER_PIN 9      // emitter is controlled by digital pin 2
 
-/*********************************************************************************************************************************
- *                                                          PID                                                                 *
- *                                                     *Pas toucher*                                                            *
-*********************************************************************************************************************************/
-QTRSensors qtr;
 
-const uint8_t SensorCount = 6;
-uint16_t sensorValues[SensorCount];
 
-void SuiveurLigneInit()
-{
-
-    /* comment this part out for automatic calibration
-  if ( i  < 25 || i >= 75 ) // turn to the left and right to expose the sensors to the brightest and darkest readings that may be encountered
-     turn_right(); 
-   else
-     turn_left(); */
-    qtr.calibrate(QTRReadMode::On);
-    qtr.setTypeAnalog();
-    qtr.setSensorPins((const uint8_t[]){A0, A1, A2, A3, A4, A5}, SensorCount);
-    qtr.setEmitterPin(EMITTER_PIN);
-    delay(20);
-}
-
-int lastError = 0;
-
-void PIDSuiveurLigne()
-{
-    //retourne 1 s'il trouve la couleur noir
-    int position = qtr.readLineBlack(sensorValues);
-
-    int error = position - 2500;
-
-    int motorSpeed = KP * error + KD * (error - lastError);
-    lastError = error;
-
-    int rightMotorSpeed = rightBaseSpeed + motorSpeed;
-    int leftMotorSpeed = leftBaseSpeed - motorSpeed;
-
-    if (rightMotorSpeed > OUTPUT_MAX)
-        rightMotorSpeed = OUTPUT_MAX; // prevent the motor from going beyond max speed
-    if (leftMotorSpeed > OUTPUT_MAX)
-        leftMotorSpeed = OUTPUT_MAX; // prevent the motor from going beyond max speed
-    if (rightMotorSpeed < 0.2)
-        rightMotorSpeed = 0.2; // keep the motor speed positive
-    if (leftMotorSpeed < 0.2)
-        leftMotorSpeed = 0.2; // keep the motor speed positive
-
-    // move forward with appropriate speeds
-    MOTOR_SetSpeed(gauche, leftMotorSpeed);
-    MOTOR_SetSpeed(droit, rightMotorSpeed);
-}
 
 /*********************************************************************************************************************************
  *                                                          Pelle                                                                * 
@@ -293,4 +243,60 @@ void TrouverVerre()
 void TrouverAssiette()
 {
     find_plate(scan_array1, scan_array2, values_sensor0, 0, 1, values_sensor1, MAXVALUES, MAXSCAN);
+}
+
+/*********************************************************************************************************************************
+ *                                                Distributeur à pain                                                            * 
+*********************************************************************************************************************************/
+
+void Distributeur_Pain(int nbr_pulse, float vitesse)
+{
+    for(int i =0; i < 4;i++){
+        sortirPain(30000);
+    }
+        sortirPain(1500);
+        delay(1000);
+    for(int i =0; i < 4;i++){
+        ramenerPain(30000);
+    }
+        ramenerPain(4900);
+}
+
+void ramenerPain(int nbr_pulse)
+{
+    for(int i = 0; i < (int)nbr_pulse/3200;i++)
+    {
+        while (ENCODER_Read(droit) >= -3200)
+        {
+            MOTOR_SetSpeed(droit, -1);
+        }
+        ENCODER_Reset(droit);
+    }
+
+    while(ENCODER_Read(droit) >= nbr_pulse%3200)
+    {
+        MOTOR_SetSpeed(droit, -1);
+    }
+    ENCODER_Reset(droit);
+    MOTOR_SetSpeed(droit, 0);
+}
+
+void sortirPain(int nbr_pulse)
+{  
+    Serial.println(nbr_pulse/3200);
+    for(int i = 0; i < (int)nbr_pulse/3200;i++)
+    {
+        while (ENCODER_Read(droit) <= 3200)
+        {
+            MOTOR_SetSpeed(droit, 1);
+        }
+        ENCODER_Reset(droit);
+    }
+
+    while(ENCODER_Read(droit) <= nbr_pulse%3200)
+    {
+        MOTOR_SetSpeed(droit, 1);
+    }
+    ENCODER_Reset(droit);
+    MOTOR_SetSpeed(droit, 0);
 }
