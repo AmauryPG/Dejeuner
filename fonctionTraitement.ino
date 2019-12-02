@@ -26,15 +26,12 @@ int getAngleEncodeur(float angleEnDegre)
 void getBluetooth(char message[])
 {
     int index = 0;
-    if (Serial.available())
+    while (Serial.available() > 0)
     {
-        while (Serial.available() > 0)
-        {
-            message[index] = Serial.read();
-            index++;
-        }
-        message[index] = '\0'; 
+        message[index] = Serial.read();
+        index++;
     }
+    message[index] = '\0';
 }
 
 /*********************************************************************************************************************************
@@ -124,4 +121,3 @@ int check_distance(int max_distance, int sensor, int table[], int length)
         return 100;
     }
 }
-

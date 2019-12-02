@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LibRobus.h>  
 #include <SoftwareSerial.h>  
+#include <QTRSensors.h>
 
 #define gauche 0
 #define droit 1
@@ -19,6 +20,10 @@
 
 #define MAXVALUES 10
 #define MAXSCAN 25
+
+#define output_pin 22
+#define test_pin 8
+#define sensitivity 400
 
 ///////////////////////////////////////////////////////General<///////////////////////////////////////////////////////
 

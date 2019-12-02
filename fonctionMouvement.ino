@@ -294,3 +294,34 @@ void TrouverAssiette()
 {
     find_plate(scan_array1, scan_array2, values_sensor0, 0, 1, values_sensor1, MAXVALUES, MAXSCAN);
 }
+
+/*********************************************************************************************************************************
+ *                                                         Aligneur                                                              * 
+*********************************************************************************************************************************/
+
+void allume_DEL()
+{
+    digitalWrite(output_pin, HIGH);
+}
+
+void ferme_DEL()
+{
+    digitalWrite(output_pin, LOW);
+}
+
+void cuitLaToast()
+{
+    while (1)
+    {
+        Serial.println(analogRead(test_pin));
+        if (analogRead(test_pin) < sensitivity)
+        {
+            allume_DEL();
+        }
+        else
+        {
+            ferme_DEL();
+        }
+        delay(1000);
+    }
+}
