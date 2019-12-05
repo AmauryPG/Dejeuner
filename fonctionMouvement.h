@@ -1,6 +1,22 @@
 #include "fonctionTraitement.h"
-#define DP_pin1 30
-#define DP_pin2 41
+#include "LibRobus.h"
+
+
+/*********************************************************************************************************************************
+ *                                                          General                                                              * 
+*********************************************************************************************************************************/
+
+void avancer(float distance, float vitesse);
+
+void reculer(float distance, float vitesse);
+
+void tournerDroit(float vitesse, int offset, float angle);
+
+void tournerGauche(float vitesse, int offset, float angle);
+
+void tournerSuiveurLigneGaucher();
+
+void tournerSuiveurLigneDroit();
 
 /*********************************************************************************************************************************
  *                                                          PID                                                                 *
@@ -9,7 +25,15 @@
 
 void SuiveurLigneInit();
 
-void PIDSuiveurLigne();
+int SuiveurLigneInverser();
+
+int SuiveurLigne();
+
+void printSuiveurLigne();
+
+int getPosition();
+
+void SuiveurLigneArret();
 
 /*********************************************************************************************************************************
  *                                                         Aligneur                                                              * 
@@ -21,16 +45,24 @@ void TrouverAssiette();
 
 int find_smallest_distance(struct scanner array[]);
 
+void cuitLaToast();
+
 /*********************************************************************************************************************************
  *                                                          Pelle                                                                * 
 *********************************************************************************************************************************/
 
-void actionPain();
+void prendreToast();
 
-void PainInit();
+void descendrePelle(int angle);
+
+void monterPelle(int angle);
+
+void deposeToast();
+
+
 
 /*********************************************************************************************************************************
- *                                                Distributeur à pain                                                            * 
+ *                                                         Pompe                                                               * 
 *********************************************************************************************************************************/
 
-void Distributeur_Pain(int nbr_pulse, float vitesse);
+void videPompe();

@@ -26,15 +26,12 @@ int getAngleEncodeur(float angleEnDegre)
 void getBluetooth(char message[])
 {
     int index = 0;
-    if (Serial.available())
+    while (Serial.available() > 0)
     {
-        while (Serial.available() > 0)
-        {
-            message[index] = Serial.read();
-            index++;
-        }
-        message[index] = '\0'; 
+        message[index] = Serial.read();
+        index++;
     }
+    message[index] = '\0';
 }
 
 /*********************************************************************************************************************************
@@ -43,85 +40,120 @@ void getBluetooth(char message[])
 
 int getDistanceInfrarouge(int location)
 {
-    int distance = 4800 / (ROBUS_ReadIR(location) - 20);
-    if (distance > 10 && distance < 60)
-    {
-        return distance;
-    }
-    else
-    {
-        return 1;
-    }
+  int distance = 4800/(ROBUS_ReadIR(location) - 20);
+  if (distance > 10 && distance < 60)
+  {
+    return distance;
+  }
+  else
+  {
+    return 1;
+  }
+  
 }
 
 int add_distance_to_table(int location, int table[], int length)
 {
-    int i;
-    for (i = 0; i < length; i++)
-    {
-        table[i] = getDistanceInfrarouge(location);
-    }
-    return 0;
+  int i;
+  for (i=0;i<length;i++)
+  {
+      table[i] = getDistanceInfrarouge(location);
+  }
+  return 0;
 }
 
 int make_histogram(int histogram[], int value_table[], int length_table, int length_histo)
 {
-    int i;
-    int value;
-    for (i = 0; i < length_histo; i++)
-    {
-        histogram[i] = 0;
-    }
+  int i;
+  int value;
+  for (i=0;i<length_histo;i++)
+  {
+    histogram[i] = 0;
+  }
 
-    for (i = 0; i < length_table; i++)
-    {
-        value = value_table[i];
-        histogram[value] += 1;
-    }
-    return 0;
+  for (i=0;i<length_table;i++)
+  {
+    value = value_table[i];
+    histogram[value]+=1;
+  }
+return 0;
 }
 
 int get_most_read_distance(int histogram[], int length)
 {
-    int i;
-    int most_read = 0;
-    for (i = 0; i < length; i++)
+  int i;
+  int most_read = 0;
+  for (i=0;i<length;i++)
+  {
+    if (i==0)
     {
-        if (i == 0)
-        {
-            most_read = i;
-        }
-        if (histogram[i] > most_read)
-        {
-            most_read = i;
-        }
+      most_read = i;
     }
-    return most_read;
+    if (histogram[i]>most_read)
+    {
+      most_read = i;
+    }
+  }
+  return most_read;
 }
 
 int distance_in_cm(int location, int sensor_table[], int length)
 {
-    int histo_length = 80;
-    int histogram[histo_length];
-    add_distance_to_table(location, sensor_table, length);
-    make_histogram(histogram, sensor_table, length, histo_length);
-    int distance = get_most_read_distance(histogram, histo_length);
-    //  Serial.println(distance);
-    return distance;
+  int histo_length = 80;
+  int histogram[histo_length];
+  add_distance_to_table(location, sensor_table, length);
+  make_histogram(histogram, sensor_table, length, histo_length);
+  int distance = get_most_read_distance(histogram, histo_length);
+//  Serial.println(distance);
+  return distance;
 }
 
 int check_distance(int max_distance, int sensor, int table[], int length)
 {
-    int distance_to_object;
-    distance_to_object = distance_in_cm(sensor, table, length);
-    //  Serial.println(distance_to_object);
-    if (distance_to_object <= max_distance && distance_to_object > 5)
-    {
-        return distance_to_object;
-    }
-    else
-    {
-        return 100;
-    }
+  int distance_to_object;
+  distance_to_object = distance_in_cm(sensor, table, length);
+//  Serial.println(distance_to_object);
+  if (distance_to_object <= max_distance && distance_to_object > 5)
+  {
+    return distance_to_object;
+  }
+  else
+  {
+    return 100;
+  }
 }
 
+
+/* ****************************************************************************
+distributeur a pain
+**************************************************************************** */
+int read_analog_pin(int pin)
+{
+    int value = analogRead(pin);
+    return value;
+}
+void get_voltage()
+{
+    int voltage, success;
+    success = 0;
+    while (success == 0)
+    {
+        voltage = read_analog_pin(6);
+        Serial.println(voltage);
+        if (voltage> 150)
+        {
+          delay(2000);
+          voltage = read_analog_pin(6);
+          if (voltage> 150)
+          {
+            SERVO_Enable(0);
+            SERVO_SetAngle(0, 180);
+            delay(2000);
+            success = 1;
+            SERVO_SetAngle(0, 114);
+            delay(2000);
+            SERVO_Disable(0);
+          }
+        }
+    }
+}

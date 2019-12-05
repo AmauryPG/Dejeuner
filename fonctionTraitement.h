@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LibRobus.h>  
 #include <SoftwareSerial.h>  
+#include <QTRSensors.h>
 
 #define gauche 0
 #define droit 1
@@ -18,7 +19,17 @@
 #define OUTPUT_MAX 1
 
 #define MAXVALUES 10
-#define MAXSCAN 25
+#define MAXSCAN 15
+
+#define output_pin  22
+#define test_pin 8
+#define sensitivity 600
+
+#define pin_pompe 45
+#define tempsPourVider 7000
+
+
+#define sensitivity_photo_distri 440
 
 ///////////////////////////////////////////////////////General<///////////////////////////////////////////////////////
 
@@ -43,3 +54,7 @@ int get_most_read_distance(int histogram[], int length);
 int distance_in_cm(int location, int sensor_table[], int length);
 
 int check_distance(int max_distance, int sensor, int table[], int length);
+
+int read_analog_pin(int pin);
+
+void get_voltage();
